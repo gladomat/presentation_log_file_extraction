@@ -65,18 +65,3 @@ for iSub = 1:numel(sub)
         writetable(T,outName,'Delimiter','\t','FileType', 'text')
     end
 end
-
-
-%         % I thought this here is necessary, but it isn't, as unique works.
-%         % Another way is necessary to remove the repetitions, as the
-%         % function unique sorts the entries before deciding upon
-%         % uniqueness, thus removing the information of what was first
-%         % presented.
-%         char_code = char(code);
-%         % Find consecutive repetitions by comparing strings. If all five
-%         % strings are found to be equal, then that is the repetition (since
-%         % a total of five strings represent the name).
-%         numOfStrings = sum(char_code(1:end-1,:) == char_code(2:end,:), 2);
-%         % +1 since it takes the first entry found, and we want the second.
-%         repStrings = find(numOfStrings == 5) + 1;
-%         timeOfSound(repStrings) = [];  % Remove undesired entries.

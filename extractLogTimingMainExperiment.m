@@ -2,6 +2,7 @@
 % first timepoint. It finds the time of the played sounds, gets the unique
 % entries from the played sounds and cleans the timing variable of the
 % repeated sounds.
+% Paul Glad Mihai, CC-BY-04 2017, mihai@cbs.mpg.de
 clear
 
 sub = {

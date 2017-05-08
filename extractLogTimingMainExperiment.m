@@ -5,44 +5,75 @@
 clear
 
 sub = {
-    '02'
-    '05'
-    '08'
-    '10'
-    '15'
-    '19'
-    '21'
-    '24'
+%     '01'
+%     '02'
+%     '03'
+%     '04'
+%     '05'
+%     '06'
+%     '08'
+%     '09'
+%     '10'
+%     '11'
+%     '12'
+%     '13'
+%     '14'
+%     '15'
+%     '16'
+%     '18'
+%     '19'
+%     '20'
+%     '21'
+%     '22'
+%     '24'
+%     '26'
+%     '28'
+%     '29'
+%     '30'
+%     '31'
+%     '32'
+%     '33'
+%      '35'
+    '37'
+%      '39'
+%       '40'
+%    '41'
+%     '43'
     };
 
 fileName = {
-    '-TdMGB_fMRI_run1.log'
-    '-TdMGB_fMRI_run2.log'
-    '-TdMGB_fMRI_run3.log'
-    '-TdMGB_fMRI_run4.log'
-    '-TdMGB_fMRI_run5.log'
+     '-TdMGB_fMRI_run1.log'
+     '-TdMGB_fMRI_run2.log'
+     '-TdMGB_fMRI_run3.log'
+     '-TdMGB_fMRI_run4.log'
+     '-TdMGB_fMRI_run5.log'
     };
 
 TR = 1.6;  % TR in secs. To calculate regressors. May be omitted if onsets used instead.
 
 % Output directory up to subject code name.
-outDir = '/scr/archimedes1/Glad/Projects/Top-down_mod_MGB/Experiments/TdMGB_fMRI/DATA/sourcedata/';
+outDir = '/nobackup/alster2/Glad/Projects/Top-down_mod_MGB/Experiments/TdMGB_fMRI/DATA/sourcedata/';
 % The rest of the output directory after subject code name.
 outDirEnd = '/ses-spespk/func/';
 % Directory of log files.
-mainDir = '/scr/archimedes1/Glad/Projects/Top-down_mod_MGB/Experiments/TdMGB_fMRI/DATA/presentation/';
+mainDir = '/nobackup/alster2/Glad/Projects/Top-down_mod_MGB/Experiments/TdMGB_fMRI/DATA/presentation/';
 % [fileName,fileFolderPath,~] = uigetfile('*.log','Select log file','MultiSelect','off');
 
 
 for iSub = 1:numel(sub)
     for iRun = 1:numel(fileName)
         fullfilepath = [mainDir, sub{iSub}, fileName{iRun}];
+        sprintf('Processing %s', fullfilepath)
         [dataName, data] = importPresentationLogRT(fullfilepath);
-                
+        
         % Set start time at zero and convert to seconds.
-        data.time = (data.time - data.time(1))/10000;
+        % We need to make sure start time coincides with first pulse, as
+        % subjects might have pressed the button by accident, resulting in
+        % log file writing initiation.
+        startTime = data.time(find(strcmp(data.event_type, 'Pulse'), 1));
+        data.time = (data.time - startTime)/10000;
         data.rt = data.rt/10000;
-        data.time_4 = (data.time_4 - data.time_4(1))/10000;
+        data.time_4 = (data.time_4 - startTime)/10000;
         
         % Find time of instruction pictures.
         timeOfInstruction = data.time(strcmp(data.event_type, 'Picture'));
@@ -113,7 +144,7 @@ for iSub = 1:numel(sub)
             ones(1, length(timeOfInstruction))};%, ones(1, length(timeOfHit)), ...
         %ones(1, length(timeOfMiss)), ones(1, length(timeOfFalse))};
         fullOutDir = [outDir, 'sub-', sub{iSub}, outDirEnd];
-        outName = sprintf('%s/sub-%s_task-spespk_run-%i_conditions.mat', fullOutDir, sub{iSub}, iRun);
+        outName = sprintf('%s/sub-%s_task-spespk_run-%02i_conditions.mat', fullOutDir, sub{iSub}, iRun);
         save(outName,'names','durations','onsets')
         
         % Create a table and save it as a tab-delimited file.
@@ -127,7 +158,7 @@ for iSub = 1:numel(sub)
                       repmat('speaker_consonant', length(spkConBlock), 1); ...
                       repmat('instruction      ', length(timeOfInstruction), 1)];
         T = table(onset, duration, trial_type);
-        outName = sprintf('%s/sub-%s_task-spespk_run-%i_events.tsv', fullOutDir, sub{iSub}, iRun);
+        outName = sprintf('%s/sub-%s_task-spespk_run-%02i_events.tsv', fullOutDir, sub{iSub}, iRun);
         writetable(T,outName,'Delimiter','\t','FileType', 'text')
         
         % Extract name and time of each sound event.
@@ -136,19 +167,8 @@ for iSub = 1:numel(sub)
         soundEventType = data.type(strcmp(data.event_type_2, 'Sound'));
         soundEventReacTime = data.rt(strcmp(data.event_type_2, 'Sound'));
         T = table(soundEvent, soundEventTime, soundEventType, soundEventReacTime);
-        outName = sprintf('%s/sub-%s_task-spespk_run-%i_individual-events.tsv', fullOutDir, sub{iSub}, iRun);
+        outName = sprintf('%s/sub-%s_task-spespk_run-%02i_individual-events.tsv', fullOutDir, sub{iSub}, iRun);
         writetable(T,outName,'Delimiter','\t','FileType', 'text')
     end
 end
-% % Calculate regressors.
-% names = {'hits', 'misses', 'false_alarms'};
-% R = zeros(326, 3);
-% R(round(timeOfHit/TR), 1) = 1;
-% R(round(timeOfMiss/TR), 2) = 1;
-% R(round(timeOfFalse/TR), 3) = 1;
-% save('P01_hit_miss_false_regressors.mat','names','R')
-
-% % Find repetitions
-% code = data.code(strcmp(data.event_type, 'Sound'));
-% [~, idx1, idx2] = unique(code);  % Get indices of unique entries.
-% timeOfSound = sort(timeOfSound(idx1)./10000.0);
+sprintf('Finished');
